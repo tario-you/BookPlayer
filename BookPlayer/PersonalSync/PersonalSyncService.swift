@@ -99,14 +99,14 @@ final class PersonalSyncService: BPLogger {
 
   private func handleProgressUpdate(_ payload: [String: Any]) {
     guard
-      let relativePath = payload[#keyPath(LibraryItem.relativePath)] as? String,
+      let relativePath = payload[#keyPath(BookPlayerKit.LibraryItem.relativePath)] as? String,
       let item = libraryService?.getSimpleItem(with: relativePath)
     else {
       return
     }
 
     let eventAt: Date
-    if let timestamp = payload[#keyPath(LibraryItem.lastPlayDate)] as? TimeInterval {
+    if let timestamp = payload[#keyPath(BookPlayerKit.LibraryItem.lastPlayDate)] as? TimeInterval {
       eventAt = Date(timeIntervalSince1970: timestamp)
     } else {
       eventAt = item.lastPlayDate ?? Date()
