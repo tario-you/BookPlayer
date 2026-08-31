@@ -13,7 +13,7 @@ import UIKit
 
 public class ArtworkService {
   static public var cache: ImageCache = {
-    let url = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: Constants.ApplicationGroupIdentifier)!
+    let url = DataManager.sharedContainerURL
 
     let cache = try! ImageCache(name: "BookPlayer", cacheDirectoryURL: url)
     cache.diskStorage.config.expiration = .never
@@ -43,7 +43,10 @@ public class ArtworkService {
   static let rightChromaGradientOffset: CGFloat = 19.337
   static let rightHueGradientOffset: CGFloat = 38.85
 
-  public class func retrieveImageFromCache(for relativePath: String, completionHandler: @escaping (Result<RetrieveImageResult, KingfisherError>) -> Void) {
+  public class func retrieveImageFromCache(
+    for relativePath: String,
+    completionHandler: @escaping (Result<RetrieveImageResult, KingfisherError>) -> Void
+  ) {
     _ = self.manager.retrieveImage(
       with: .provider(self.getArtworkProvider(for: relativePath)),
       options: [.targetCache(Self.cache)],
@@ -120,82 +123,106 @@ public class ArtworkService {
 }
 
 #if os(iOS)
-extension ArtworkService {
-  public class func generateDefaultArtwork(from color: UIColor?, with size: CGSize = CGSize(width: 50, height: 50)) -> UIImage? {
-    let baseColorLCH = self.getLCHColor(from: color)
+  extension ArtworkService {
+    public class func generateDefaultArtwork(
+      from color: UIColor?,
+      with size: CGSize = CGSize(width: 50, height: 50)
+    ) -> UIImage? {
+      let baseColorLCH = self.getLCHColor(from: color)
 
-    let blankspace = UIView()
+      let blankspace = UIView()
 
-    let stackView = UIStackView(arrangedSubviews: [blankspace])
-    stackView.frame = CGRect(x: 0, y: 0, width: size.width, height: size.height)
-    stackView.axis = .vertical
-    stackView.backgroundColor = baseColorLCH.toRGB().color()
-    stackView.spacing = 2
+      let stackView = UIStackView(arrangedSubviews: [blankspace])
+      stackView.frame = CGRect(x: 0, y: 0, width: size.width, height: size.height)
+      stackView.axis = .vertical
+      stackView.backgroundColor = baseColorLCH.toRGB().color()
+      stackView.spacing = 2
 
-    let leftGradientLayer = CAGradientLayer()
-    leftGradientLayer.frame = stackView.frame
-    leftGradientLayer.type = .radial
-    leftGradientLayer.startPoint = CGPoint(x: 0, y: 0)
-    leftGradientLayer.endPoint = CGPoint(x: 1, y: 1)
-    let rightGradientLayer = CAGradientLayer()
-    rightGradientLayer.frame = stackView.frame
-    rightGradientLayer.type = .radial
-    rightGradientLayer.startPoint = CGPoint(x: 1, y: 0)
-    rightGradientLayer.endPoint = CGPoint(x: 0, y: 1)
+      let leftGradientLayer = CAGradientLayer()
+      leftGradientLayer.frame = stackView.frame
+      leftGradientLayer.type = .radial
+      leftGradientLayer.startPoint = CGPoint(x: 0, y: 0)
+      leftGradientLayer.endPoint = CGPoint(x: 1, y: 1)
+      let rightGradientLayer = CAGradientLayer()
+      rightGradientLayer.frame = stackView.frame
+      rightGradientLayer.type = .radial
+      rightGradientLayer.startPoint = CGPoint(x: 1, y: 0)
+      rightGradientLayer.endPoint = CGPoint(x: 0, y: 1)
 
-    leftGradientLayer.colors = self.getLeftGradiants(for: baseColorLCH)
-    rightGradientLayer.colors = self.getRightGradiants(for: baseColorLCH)
+      leftGradientLayer.colors = self.getLeftGradiants(for: baseColorLCH)
+      rightGradientLayer.colors = self.getRightGradiants(for: baseColorLCH)
 
-    stackView.layer.insertSublayer(leftGradientLayer, at: 0)
-    stackView.layer.insertSublayer(rightGradientLayer, at: 0)
+      stackView.layer.insertSublayer(leftGradientLayer, at: 0)
+      stackView.layer.insertSublayer(rightGradientLayer, at: 0)
 
-    return self.image(with: stackView)
-  }
-
-  private class func getLCHColor(from color: UIColor?) -> LCHColor {
-    let baseColorLCH: LCHColor
-    if let color = color,
-       let rgbColor = color.rgbColor() {
-      baseColorLCH = rgbColor.toLCH()
-    } else {
-      baseColorLCH = self.baseDefaultColor.toLCH()
+      return self.image(with: stackView)
     }
 
-    return baseColorLCH
-  }
+    private class func getLCHColor(from color: UIColor?) -> LCHColor {
+      let baseColorLCH: LCHColor
+      if let color = color,
+        let rgbColor = color.rgbColor()
+      {
+        baseColorLCH = rgbColor.toLCH()
+      } else {
+        baseColorLCH = self.baseDefaultColor.toLCH()
+      }
 
-  public class func getLeftGradiants(for color: UIColor) -> [CGColor] {
-    return self.getLeftGradiants(for: self.getLCHColor(from: color))
-  }
+      return baseColorLCH
+    }
 
-  private class func getLeftGradiants(for baseColorLCH: LCHColor) -> [CGColor] {
-    let leftColor = LCHColor(l: baseColorLCH.l + self.leftLuminanceGradientOffset, c: baseColorLCH.c + self.leftChromaGradientOffset, h: baseColorLCH.h + self.leftHueGradientOffset, alpha: baseColorLCH.alpha)
-    let leftBlankColor = LCHColor(l: baseColorLCH.l + self.leftLuminanceGradientOffset, c: baseColorLCH.c + self.leftChromaGradientOffset, h: baseColorLCH.h + self.leftHueGradientOffset, alpha: 0)
+    public class func getLeftGradiants(for color: UIColor) -> [CGColor] {
+      return self.getLeftGradiants(for: self.getLCHColor(from: color))
+    }
 
-    return [leftColor.toRGB().color().cgColor, leftBlankColor.toRGB().color().cgColor]
-  }
+    private class func getLeftGradiants(for baseColorLCH: LCHColor) -> [CGColor] {
+      let leftColor = LCHColor(
+        l: baseColorLCH.l + self.leftLuminanceGradientOffset,
+        c: baseColorLCH.c + self.leftChromaGradientOffset,
+        h: baseColorLCH.h + self.leftHueGradientOffset,
+        alpha: baseColorLCH.alpha
+      )
+      let leftBlankColor = LCHColor(
+        l: baseColorLCH.l + self.leftLuminanceGradientOffset,
+        c: baseColorLCH.c + self.leftChromaGradientOffset,
+        h: baseColorLCH.h + self.leftHueGradientOffset,
+        alpha: 0
+      )
 
-  public class func getRightGradiants(for color: UIColor) -> [CGColor] {
-    return self.getRightGradiants(for: self.getLCHColor(from: color))
-  }
+      return [leftColor.toRGB().color().cgColor, leftBlankColor.toRGB().color().cgColor]
+    }
 
-  private class func getRightGradiants(for baseColorLCH: LCHColor) -> [CGColor] {
-    let rightColor = LCHColor(l: baseColorLCH.l + self.rightLuminanceGradientOffset, c: baseColorLCH.c + self.rightChromaGradientOffset, h: baseColorLCH.h + self.rightHueGradientOffset, alpha: baseColorLCH.alpha)
-    let rightBlankColor = LCHColor(l: baseColorLCH.l + self.rightLuminanceGradientOffset, c: baseColorLCH.c + self.rightChromaGradientOffset, h: baseColorLCH.h + self.rightHueGradientOffset, alpha: 0)
+    public class func getRightGradiants(for color: UIColor) -> [CGColor] {
+      return self.getRightGradiants(for: self.getLCHColor(from: color))
+    }
 
-    return [rightColor.toRGB().color().cgColor, rightBlankColor.toRGB().color().cgColor]
-  }
+    private class func getRightGradiants(for baseColorLCH: LCHColor) -> [CGColor] {
+      let rightColor = LCHColor(
+        l: baseColorLCH.l + self.rightLuminanceGradientOffset,
+        c: baseColorLCH.c + self.rightChromaGradientOffset,
+        h: baseColorLCH.h + self.rightHueGradientOffset,
+        alpha: baseColorLCH.alpha
+      )
+      let rightBlankColor = LCHColor(
+        l: baseColorLCH.l + self.rightLuminanceGradientOffset,
+        c: baseColorLCH.c + self.rightChromaGradientOffset,
+        h: baseColorLCH.h + self.rightHueGradientOffset,
+        alpha: 0
+      )
 
-  private class func image(with view: UIView) -> UIImage? {
-    UIGraphicsBeginImageContextWithOptions(view.bounds.size, view.isOpaque, 0.0)
-    defer { UIGraphicsEndImageContext() }
-    if let context = UIGraphicsGetCurrentContext() {
-      view.layer.render(in: context)
-      let image = UIGraphicsGetImageFromCurrentImageContext()
-      return image
-    } else {
-      return nil
+      return [rightColor.toRGB().color().cgColor, rightBlankColor.toRGB().color().cgColor]
+    }
+
+    private class func image(with view: UIView) -> UIImage? {
+      UIGraphicsBeginImageContextWithOptions(view.bounds.size, view.isOpaque, 0.0)
+      defer { UIGraphicsEndImageContext() }
+      if let context = UIGraphicsGetCurrentContext() {
+        view.layer.render(in: context)
+        let image = UIGraphicsGetImageFromCurrentImageContext()
+        return image
+      } else {
+        return nil
+      }
     }
   }
-}
 #endif

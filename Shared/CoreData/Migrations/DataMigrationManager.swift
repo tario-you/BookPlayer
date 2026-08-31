@@ -18,10 +18,8 @@ public final class DataMigrationManager: BPLogger {
 
   public init() {
     self.currentModel = .model(named: self.modelName)
-    let storeURL = FileManager.default.containerURL(
-      forSecurityApplicationGroupIdentifier: Constants.ApplicationGroupIdentifier
-    )!
-    .appendingPathComponent("\(self.modelName).sqlite")
+    let storeURL = DataManager.sharedContainerURL
+      .appendingPathComponent("\(self.modelName).sqlite")
     self.storeURL = storeURL
     self.storeModel =
       NSManagedObjectModel.modelVersionsFor(modelNamed: self.modelName)

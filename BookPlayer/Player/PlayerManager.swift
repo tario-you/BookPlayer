@@ -290,14 +290,18 @@ final class PlayerManager: NSObject, PlayerManagerProtocol, ObservableObject {
       }
 
       playedObserver = NotificationCenter.default.addObserver(
-        forName: .bookPlayed, object: nil, queue: .main
+        forName: .bookPlayed,
+        object: nil,
+        queue: .main
       ) { _ in
         cleanup()
         continuation.resume()
       }
 
       readyObserver = NotificationCenter.default.addObserver(
-        forName: .bookReady, object: nil, queue: .main
+        forName: .bookReady,
+        object: nil,
+        queue: .main
       ) { notification in
         if notification.userInfo?["loaded"] as? Bool == false {
           cleanup()
@@ -717,12 +721,31 @@ extension PlayerManager {
     // re-seeded by time in `PlayableItem.init` — and the chapter-change subscription must be
     // re-bound to the new instance, otherwise the end-of-chapter sleep timer silently breaks.
     guard let relativePath = currentItem?.relativePath,
-          let libraryItem = libraryService.getSimpleItem(with: relativePath),
-          let updatedItem = try? playbackService.getPlayableItem(from: libraryItem) else {
+      let libraryItem = libraryService.getSimpleItem(with: relativePath),
+      let updatedItem = try? playbackService.getPlayableItem(from: libraryItem)
+    else {
       return
     }
     currentItem = updatedItem
     bindPlayableChapterSubscription(to: updatedItem, dropInitialReplay: true)
+  }
+
+  @MainActor
+  func applyExternalProgress(relativePath: String, time: TimeInterval) {
+    guard currentItem?.relativePath == relativePath, !isPlaying else { return }
+
+    reloadCurrentItem()
+    guard let currentItem else { return }
+
+    let boundedTime = min(max(time, 0), currentItem.duration)
+    currentItem.currentTime = boundedTime
+    if let chapter = currentItem.getChapter(at: boundedTime) {
+      currentItem.currentChapter = chapter
+    }
+    initializeChapterTime(boundedTime)
+    setNowPlayingBookTime()
+    MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
+    NotificationCenter.default.post(name: .listeningProgressChanged, object: nil)
   }
 
   func initializeChapterTime(_ time: Double) {
@@ -904,7 +927,8 @@ extension PlayerManager {
     guard currentItem != nil, !isPlaying, nowPlayingClaimSubscription == nil else { return false }
 
     audioPlayer.isMuted = true
-    nowPlayingClaimSubscription = timeControlPassthroughPublisher
+    nowPlayingClaimSubscription =
+      timeControlPassthroughPublisher
       .filter { $0 == .playing }
       .first()
       // DispatchQueue (not RunLoop) so the timeout still fires while the run loop is in tracking mode
@@ -966,11 +990,14 @@ extension PlayerManager {
       scope.setLevel(.info)
       scope.setFingerprint(["audio-session-recovery"])
       scope.setTag(value: "audio_session_recovery", key: "playback_failure")
-      scope.setContext(value: [
-        "secondsSinceFailure": Int(Date().timeIntervalSince1970 - failedAt),
-        "requiredAppRelaunch": requiredRelaunch,
-        "previousErrorCode": defaults.integer(forKey: Constants.UserDefaults.audioSessionFailureCode),
-      ], key: "audio_session")
+      scope.setContext(
+        value: [
+          "secondsSinceFailure": Int(Date().timeIntervalSince1970 - failedAt),
+          "requiredAppRelaunch": requiredRelaunch,
+          "previousErrorCode": defaults.integer(forKey: Constants.UserDefaults.audioSessionFailureCode),
+        ],
+        key: "audio_session"
+      )
     }
 
     defaults.removeObject(forKey: Constants.UserDefaults.audioSessionFailureTimestamp)
@@ -1015,14 +1042,17 @@ extension PlayerManager {
           scope.setLevel(.error)
           scope.setFingerprint(["audio-session-activation-failure"])
           scope.setTag(value: "audio_session_activation", key: "playback_failure")
-          scope.setContext(value: [
-            "errorCode": nsError.code,
-            "errorDomain": nsError.domain,
-            "isOtherAudioPlaying": AVAudioSession.sharedInstance().isOtherAudioPlaying,
-            "applicationState": UIApplication.shared.applicationState == .active ? "active" : "background",
-            "autoPlayed": autoPlayed,
-            "relativePath": currentItem.relativePath,
-          ], key: "audio_session")
+          scope.setContext(
+            value: [
+              "errorCode": nsError.code,
+              "errorDomain": nsError.domain,
+              "isOtherAudioPlaying": AVAudioSession.sharedInstance().isOtherAudioPlaying,
+              "applicationState": UIApplication.shared.applicationState == .active ? "active" : "background",
+              "autoPlayed": autoPlayed,
+              "relativePath": currentItem.relativePath,
+            ],
+            key: "audio_session"
+          )
         }
         markAudioSessionFailure(nsError)
         NSLog("[PlayerManager] Audio session activation failed: %@", error.localizedDescription)

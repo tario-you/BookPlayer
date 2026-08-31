@@ -26,7 +26,7 @@ public class CoreDataStack {
 
   public init(modelName: String) {
     self.modelName = modelName
-    let storeUrl = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: Constants.ApplicationGroupIdentifier)!.appendingPathComponent("BookPlayer.sqlite")
+    let storeUrl = DataManager.sharedContainerURL.appendingPathComponent("BookPlayer.sqlite")
     self.storeUrl = storeUrl
     self.storeContainer = NSPersistentContainer(name: modelName)
 
