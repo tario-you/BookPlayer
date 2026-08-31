@@ -1066,7 +1066,7 @@
 		AABBCCDD1000000000000002 /* PersonalSyncClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalSyncClient.swift; sourceTree = "<group>"; };
 		AABBCCDD1000000000000003 /* PersonalSyncPendingStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalSyncPendingStore.swift; sourceTree = "<group>"; };
 		AABBCCDD1000000000000004 /* PersonalSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalSyncService.swift; sourceTree = "<group>"; };
-		AABBCCDD1000000000000005 /* PersonalSyncTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalSyncTests.swift; sourceTree = "<group>"; };
+		AABBCCDD1000000000000005 /* PersonalSyncTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/PersonalSyncTests.swift; sourceTree = "<group>"; };
 		AABBCCDD1000000000000006 /* BookPlayer-Personal.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "BookPlayer-Personal.entitlements"; sourceTree = "<group>"; };
 		056B7A76F1A44CEC30562382 /* IntegrationQuickConnectViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntegrationQuickConnectViews.swift; sourceTree = "<group>"; };
 		0EA09FE5A35CEA0B87F83EF3 /* PreferencesSyncServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreferencesSyncServiceTests.swift; sourceTree = "<group>"; };
