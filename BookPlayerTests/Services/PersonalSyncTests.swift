@@ -117,7 +117,7 @@ final class PersonalSyncTests: XCTestCase {
       XCTAssertEqual(request.value(forHTTPHeaderField: "apikey"), "public-key")
       XCTAssertEqual(request.httpMethod, "POST")
 
-      let body = try XCTUnwrap(request.httpBody)
+      let body = try Self.bodyData(from: request)
       let json = try XCTUnwrap(
         JSONSerialization.jsonObject(with: body) as? [String: Any]
       )
@@ -226,6 +226,31 @@ final class PersonalSyncTests: XCTestCase {
       try container.encode(formatter.string(from: date))
     }
     return try! encoder.encode(records)
+  }
+
+  private static func bodyData(from request: URLRequest) throws -> Data {
+    if let body = request.httpBody {
+      return body
+    }
+
+    let stream = try XCTUnwrap(request.httpBodyStream)
+    stream.open()
+    defer { stream.close() }
+
+    var data = Data()
+    var buffer = [UInt8](repeating: 0, count: 4_096)
+    while true {
+      let count = buffer.withUnsafeMutableBufferPointer { pointer in
+        stream.read(pointer.baseAddress!, maxLength: pointer.count)
+      }
+      if count < 0 {
+        throw try XCTUnwrap(stream.streamError)
+      }
+      if count == 0 {
+        return data
+      }
+      data.append(contentsOf: buffer.prefix(count))
+    }
   }
 }
 
