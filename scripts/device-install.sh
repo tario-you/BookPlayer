@@ -38,6 +38,22 @@ if [[ -z "$anon_key" || ${#library_secret} -lt 32 ]]; then
   exit 1
 fi
 
+umask 077
+build_config="$(mktemp "${TMPDIR:-/tmp}/bookplayer-sync.XXXXXX")"
+trap 'rm -f "$build_config"' EXIT
+printf '%s\n' \
+  "DEVELOPMENT_TEAM = $team_id" \
+  'CODE_SIGN_STYLE = Automatic' \
+  'CODE_SIGN_ENTITLEMENTS = BookPlayer/BookPlayer-Personal.entitlements' \
+  'PROVISIONING_PROFILE_SPECIFIER =' \
+  'BP_ENTITLEMENTS = BookPlayer-Personal' \
+  "BP_BUNDLE_IDENTIFIER = $bundle_id" \
+  'BP_DISPLAY_NAME = BookPlayer Sync' \
+  'BP_PERSONAL_SYNC_URL = https:/$()/xtcxqmjnzjzgvnoejdup.supabase.co' \
+  "BP_PERSONAL_SYNC_ANON_KEY = $anon_key" \
+  "BP_PERSONAL_SYNC_LIBRARY_SECRET = $library_secret" \
+  > "$build_config"
+
 build_app() {
   local destination_id="$1"
   local derived_data="$2"
@@ -49,17 +65,9 @@ build_app() {
     -configuration Debug \
     -destination "id=$destination_id" \
     -derivedDataPath "$derived_data" \
+    -xcconfig "$build_config" \
+    -quiet \
     -allowProvisioningUpdates \
-    DEVELOPMENT_TEAM="$team_id" \
-    CODE_SIGN_STYLE=Automatic \
-    CODE_SIGN_ENTITLEMENTS=BookPlayer/BookPlayer-Personal.entitlements \
-    PROVISIONING_PROFILE_SPECIFIER= \
-    BP_ENTITLEMENTS=BookPlayer-Personal \
-    BP_BUNDLE_IDENTIFIER="$bundle_id" \
-    "BP_DISPLAY_NAME=BookPlayer Sync" \
-    'BP_PERSONAL_SYNC_URL=https:/$()/xtcxqmjnzjzgvnoejdup.supabase.co' \
-    BP_PERSONAL_SYNC_ANON_KEY="$anon_key" \
-    BP_PERSONAL_SYNC_LIBRARY_SECRET="$library_secret" \
     build
 }
 
