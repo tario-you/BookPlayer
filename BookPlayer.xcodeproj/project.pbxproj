@@ -3962,13 +3962,11 @@
 				418B6CF61D2707F800F974FB /* Resources */,
 				41D4F2C92101464D009F1B1E /* Embed Frameworks */,
 				41CE44A322712E0F00C900AF /* Embed Foundation Extensions */,
-				4140EA58227288EF0009F794 /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				41A1B0E6226E9BC500EA0400 /* PBXTargetDependency */,
-				4140EA4D227288EF0009F794 /* PBXTargetDependency */,
 				41342D0424435D9900F0905B /* PBXTargetDependency */,
 				416A29AF2569658300605395 /* PBXTargetDependency */,
 				9F4A33E6292B0C710034CD4C /* PBXTargetDependency */,
