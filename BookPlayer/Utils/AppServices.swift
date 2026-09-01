@@ -30,6 +30,8 @@ final class AppServices: BPLogger {
 
   let reviewPromptService = ReviewPromptService()
 
+  let personalSyncService = PersonalSyncService()
+
   private init() {}
 
   // MARK: - Core Services Setup
@@ -90,6 +92,10 @@ final class AppServices: BPLogger {
         speedService: SpeedService(libraryService: libraryService),
         shakeMotionService: ShakeMotionService(),
         widgetReloadService: WidgetReloadService()
+      )
+      personalSyncService.setup(
+        libraryService: libraryService,
+        playerManager: playerManager
       )
       let watchService = PhoneWatchConnectivityService(
         libraryService: libraryService,

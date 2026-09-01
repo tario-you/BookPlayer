@@ -303,6 +303,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate, BPLogger {
 
   /// Setup observer for user preference, and setup Sentry based on initial value
   func setupSentry() {
+    guard PersonalSyncConfiguration() == nil else {
+      return
+    }
+
     let userDefaults = UserDefaults.standard
     crashReportsAccessObserver = userDefaults.observe(
       \.userSettingsCrashReportsDisabled

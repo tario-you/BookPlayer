@@ -22,7 +22,22 @@ public class DataManager {
     return FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
   }()
   private static var applicationSupportFolderURL: URL = {
-    return FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+    let url = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+    try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+    return url
+  }()
+  /// The shared App Group container in production. Personal builds without an App Group
+  /// entitlement use an app-local directory so the main player remains fully functional.
+  public static var sharedContainerURL: URL = {
+    if let groupURL = FileManager.default.containerURL(
+      forSecurityApplicationGroupIdentifier: Constants.ApplicationGroupIdentifier
+    ) {
+      return groupURL
+    }
+
+    let localURL = applicationSupportFolderURL.appendingPathComponent("BookPlayerShared", isDirectory: true)
+    try? FileManager.default.createDirectory(at: localURL, withIntermediateDirectories: true)
+    return localURL
   }()
   /// Prefer using this instead of ``getProcessedFolderURL()``, as it's calculated just once
   public static var processedFolderURL: URL = {
@@ -32,7 +47,11 @@ public class DataManager {
 
     if !FileManager.default.fileExists(atPath: processedFolderURL.path) {
       do {
-        try FileManager.default.createDirectory(at: processedFolderURL, withIntermediateDirectories: true, attributes: nil)
+        try FileManager.default.createDirectory(
+          at: processedFolderURL,
+          withIntermediateDirectories: true,
+          attributes: nil
+        )
       } catch {
         fatalError("Couldn't create Processed folder")
       }
@@ -60,7 +79,11 @@ public class DataManager {
 
     if !FileManager.default.fileExists(atPath: processedFolderURL.path) {
       do {
-        try FileManager.default.createDirectory(at: processedFolderURL, withIntermediateDirectories: true, attributes: nil)
+        try FileManager.default.createDirectory(
+          at: processedFolderURL,
+          withIntermediateDirectories: true,
+          attributes: nil
+        )
       } catch {
         fatalError("Couldn't create Processed folder")
       }
@@ -136,7 +159,7 @@ public class DataManager {
   }
 
   public class func getSharedFilesFolderURL() -> URL {
-    let containerURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: Constants.ApplicationGroupIdentifier)!
+    let containerURL = sharedContainerURL
 
     let sharedFolderURL = containerURL.appendingPathComponent(self.sharedFolderName)
 
@@ -181,7 +204,7 @@ public class DataManager {
 
     let containingFolder = url.deletingLastPathComponent()
 
-    guard 
+    guard
       processedFolder != containingFolder,
       !FileManager.default.fileExists(atPath: containingFolder.path)
     else { return }

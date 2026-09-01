@@ -67,7 +67,8 @@ public class DatabaseBackupService: BPLogger {
       )
 
       // Filter to only .sqlite files and sort by creation date (newest first)
-      let backups = files
+      let backups =
+        files
         .filter { $0.pathExtension == "sqlite" }
         .sorted { url1, url2 in
           let date1 = (try? url1.resourceValues(forKeys: [.creationDateKey]).creationDate) ?? Date.distantPast
@@ -129,16 +130,7 @@ public class DatabaseBackupService: BPLogger {
 
   /// Returns the URL of the source CoreData database file
   private func getSourceDatabaseURL() -> URL? {
-    guard
-      let containerURL = fileManager.containerURL(
-        forSecurityApplicationGroupIdentifier: Constants.ApplicationGroupIdentifier
-      )
-    else {
-      Self.logger.error("Failed to get App Group container URL")
-      return nil
-    }
-
-    return containerURL.appendingPathComponent("BookPlayer.sqlite")
+    return DataManager.sharedContainerURL.appendingPathComponent("BookPlayer.sqlite")
   }
 
   /// Creates a timestamped backup URL in the ApplicationSupport/DatabaseBackups folder
